@@ -6,7 +6,7 @@ const port = process.env.PORT
 
 const { socketRoute } = require('./socket/socketRoutes')
 
-const http = require('http')
+const https = require('http')
 
 const cors = require('cors')
 app.use(cors("*"))
@@ -21,9 +21,9 @@ const option = {
 mongoose.connect(dbUrl, option)
     .then(() => {
         console.log('----------------------------db connected successfully-----------------------------');
-        const httpsServer = http.createServer(app);
+        const httpsServer = https.createServer(app);
         const server = httpsServer.listen(port, function () {
-            console.log('-----------------------------------------', `http://localhost:${process.env.PORT}`, '----------------------------------------------------');
+            // console.log('-----------------------------------------', `http://localhost:${process.env.PORT}`, '----------------------------------------------------');
             socketRoute(this)
         });
         module.exports = server;
