@@ -37,7 +37,9 @@ exports.addMessage = async (userId,receiver,message) => {
   console.log('receiver: ', receiver);
   const userID = userId
   console.log('userID: ', userID);
-
+if (receiver === undefined){
+  return null
+}
   try {
     const data = {
       sender: userID,

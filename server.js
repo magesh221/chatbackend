@@ -23,7 +23,7 @@ mongoose.connect(dbUrl, option)
         console.log('----------------------------db connected successfully-----------------------------');
         const httpsServer = https.createServer(app);
         const server = httpsServer.listen(port, function () {
-            // console.log('-----------------------------------------', `http://localhost:${process.env.PORT}`, '----------------------------------------------------');
+            console.log('-----------------------------------------', `http://localhost:${process.env.PORT}`, '----------------------------------------------------');
             socketRoute(this)
         });
         module.exports = server;

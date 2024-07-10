@@ -39,7 +39,8 @@ exports.handleConnection = function (socket, connections, io) {
         // })
 
         socket.on('message', async (data) => {
-            if(data.receiver=== null || undefined){
+            console.log('data: ', data);
+            if(data.receiver === null || undefined){
                 return null
             }
 
@@ -55,10 +56,10 @@ exports.handleConnection = function (socket, connections, io) {
                 await addMessage(userId, data.receiver, data.message)
                 await dbMsg.find(query)
                     .then((messages) => {
-                        console.log('messages: ', messages);
-                        socket.emit('getmsg', messages)
-                        // const socketId = connections.get(data.receiver) || null;
-                        // if (socketId) io.to(socketId).emit("getmsg", messages);
+                        // console.log('messages: ', messages);
+                        // socket.emit('getmsg', messages)
+                        const socketId = connections.get(data.receiver) || null;
+                        if (socketId) io.to(socketId).emit("getmsg", messages);
                     }).catch((err) => {
                         console.log('err: ', err);
                     });
@@ -67,10 +68,10 @@ exports.handleConnection = function (socket, connections, io) {
             } else {
                 await dbMsg.find(query)
                     .then((messages) => {
-                        console.log('messages: ', messages);
-                        socket.emit('getmsg', messages)
-                        // const socketId = connections.get(data.receiver) || null;
-                        // if (socketId) io.to(socketId).emit("getmsg", messages);
+                        // console.log('messages: ', messages);
+                        // socket.emit('getmsg', messages)
+                        const socketId = connections.get(data.receiver) || null;
+                        if (socketId) io.to(socketId).emit("getmsg", messages);
                     }).catch((err) => {
                         console.log('err: ', err);
                     });

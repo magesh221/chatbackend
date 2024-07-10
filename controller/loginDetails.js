@@ -61,31 +61,31 @@ exports.usersList = async (req, res) => {
 }
 
 exports.profile_pic = async (req, res) => {
-  
+
   const userID = req.userId._id
   try {
     dbAuth.findById(userID)
-    .then((response)=>{
-      const filePath = response.filePath 
-       if (filePath == undefined){
-      return res.status(200).json({ status : true , filePath:'undefined'  });
-       }
-      else{
-        const data = {
-          name : response.name,
-          email : response.email,
-          phone : response.phone,
-          filePath : response.filePath
+      .then((response) => {
+        const filePath = response.filePath
+        if (filePath == undefined) {
+          return res.status(200).json({ status: true, filePath: 'undefined' });
         }
-        res.status(200).json({ status: true, response: data })
-      }
-    })
-    .catch((error)=>{
-      return res.status(400).json({ status:false ,  error: 'No Files are upload' });
+        else {
+          const data = {
+            name: response.name,
+            email: response.email,
+            phone: response.phone,
+            filePath: response.filePath
+          }
+          res.status(200).json({ status: true, response: data })
+        }
+      })
+      .catch((error) => {
+        return res.status(400).json({ status: false, error: 'No Files are upload' });
 
-    })
+      })
   } catch (error) {
-    return res.status(400).json({status:false ,  error: 'No file uploaded' });
+    return res.status(400).json({ status: false, error: 'No file uploaded' });
   }
 }
 
@@ -135,9 +135,112 @@ exports.profile_pic = async (req, res) => {
 // };
 
 
+const AWS = require('aws-sdk')
+var albumBucketName = "cmapk";
+var bucketRegion = "ap-south-1";
+var IdentityPoolId = "ap-south-1:45052911-803f-48e8-92b3-c77f63af93ab";
+
+AWS.config.update({
+  region: bucketRegion,
+  credentials: new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: IdentityPoolId,
+  }),
+});
+
+var s3 = new AWS.S3({
+  apiVersion: "2006-03-01",
+  params: { Bucket: albumBucketName },
+});
+
+exports.uploads = async (req, res) => {
+  const timestamp = new Date().getTime();
+  const date = new Date(timestamp);
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+  const istDate = new Date(date.getTime() + istOffset);
+  const day = istDate.getUTCDate();
+  const month = istDate.getUTCMonth() + 1; // Months are zero-based
+  const year = istDate.getUTCFullYear();
+  const hours = istDate.getUTCHours();
+  const minutes = istDate.getUTCMinutes();
+  const seconds = istDate.getUTCSeconds();
+const dateformate = `${day}-${month}-${year}__${hours}-${minutes}-${seconds}`
+console.log('dateformate: ', dateformate);
+  const companyName = "maddy"
+  const { file } = req;
+  const fileName = `${req.body.documentFeild}_${file.originalname}`;
+  const fileContent = file.buffer;
+  const folderName = `${companyName}${dateformate}`
+  
+  const params = {
+    Bucket: albumBucketName,
+    Key: `Documents/${folderName}/${fileName}`,
+    Body: fileContent,
+    ACL: 'public-read',
+    ContentType: file.mimetype,
+    ContentDisposition: "inline"
+  };
+
+  try {
+    const data = await s3.upload(params).promise();
+    console.log('Upload Success', data);
+    res.status(200).send({
+      message: 'File uploaded successfully',
+      data: data,
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).send({
+      message: 'Error uploading file',
+      error: error.message,
+    });
+  }
+};
+
+exports.multipleUploads = async (req, res) => {
+  const files = req.files;  // Access the array of files
+  if (!files || files.length === 0) {
+    return res.status(400).send({
+      message: 'No files uploaded',
+    });
+  }
+
+  // Create an array of promises to handle multiple file uploads
+  const uploadPromises = files.map(file => {
+    const fileName = file.originalname;
+    const fileContent = file.buffer;
+    // Key: `${folderName}/${fileName}`
+    const params = {
+      Bucket: albumBucketName,
+      Key: fileName,
+      Body: fileContent,
+      ACL: 'public-read',
+      ContentDisposition: "inline"
+    };
+
+    return s3.upload(params).promise();
+  });
+
+  try {
+    const data = await Promise.all(uploadPromises);
+    const fileLocations = data.map(result => result);
+
+    console.log('Upload Success', fileLocations);
+    res.status(200).send({
+      message: 'Files uploaded successfully',
+      data: fileLocations,
+    });
+  } catch (error) {
+    console.error('Error uploading files:', error);
+    res.status(500).send({
+      message: 'Error uploading files',
+      error: error.message,
+    });
+  }
+}
+
 exports.imageUpload = async (req, res) => {
   const { file } = req;
-   const { filePath } = req.body;
+  const { filePath } = req.body;
   const userID = req.userId._id; // Ensure this is correct based on how userId is set in req
   if (!file) {
     return res.status(400).json({ error: 'file upload error' });
