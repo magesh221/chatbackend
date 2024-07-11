@@ -17,7 +17,7 @@ router.get('/profile_pic', helper.Authorization, loginController.profile_pic)
 router.post("/imageupload", helper.Authorization, upload.single('file', 'filePath'), loginController.imageUpload)
 router.post('/addmsg', helper.Authorization, message.addMessage)
 router.post("/upload", upload.single('file', 'filePath'), loginController.uploads)
-router.post("/multiupload", upload.array('files', 10), loginController.multipleUploads);
+router.post("/multiupload", upload.array('files', 50), loginController.multipleUploads);
 
 
 

@@ -169,11 +169,13 @@ console.log('dateformate: ', dateformate);
   const { file } = req;
   const fileName = `${req.body.documentFeild}_${file.originalname}`;
   const fileContent = file.buffer;
-  const folderName = `${companyName}${dateformate}`
+  // const folderName = `${companyName}${dateformate}`
+  
+
   
   const params = {
     Bucket: albumBucketName,
-    Key: `Documents/${folderName}/${fileName}`,
+    Key: `Documents/${companyName}/${fileName}`,
     Body: fileContent,
     ACL: 'public-read',
     ContentType: file.mimetype,
@@ -197,6 +199,7 @@ console.log('dateformate: ', dateformate);
 };
 
 exports.multipleUploads = async (req, res) => {
+  
   const files = req.files;  // Access the array of files
   if (!files || files.length === 0) {
     return res.status(400).send({
@@ -206,22 +209,25 @@ exports.multipleUploads = async (req, res) => {
 
   // Create an array of promises to handle multiple file uploads
   const uploadPromises = files.map(file => {
-    const fileName = file.originalname;
     const fileContent = file.buffer;
+    const folderName = req.body.companyName
+    const documentName = `${req.body.documentFeild}_${file.originalname}`
+    console.log('documentName: ', documentName);
     // Key: `${folderName}/${fileName}`
     const params = {
       Bucket: albumBucketName,
-      Key: fileName,
+      Key: `Documents/${folderName}/${documentName}`,
       Body: fileContent,
       ACL: 'public-read',
-      ContentDisposition: "inline"
+      ContentType: file.mimetype,
+    ContentDisposition: "inline"
     };
 
     return s3.upload(params).promise();
   });
 
   try {
-    const data = await Promise.all(uploadPromises);
+    const data = await Promise.all(uploadPromises);234761
     const fileLocations = data.map(result => result);
 
     console.log('Upload Success', fileLocations);
